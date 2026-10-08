@@ -16,7 +16,7 @@ from fatiguetrack.behavioral_features import (
     behavioral_feature_vector,
 )
 
-from fatiguetrack.eeg_features import (
+from fatiguetrack.eeg_features_04_10_2026 import (
     EEG_CHANNELS,
     extract_eeg_features,
     compact_eeg_feature_names,

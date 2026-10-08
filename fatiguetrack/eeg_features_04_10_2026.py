@@ -22,25 +22,7 @@ EEG_BANDS = {
     "beta": (13.0, 30.0),
 }
 
-EPS = 1e-8  # Used only for dimensionless spectral entropy, not power ratios.
-
-
-# Version marker used by refresh_eeg_ratios.py and the corrected-data audit.
-EEG_RATIO_METHOD = "positive_denominator_v1"
-
-
-def _safe_power_ratio(numerator: float, denominator: float) -> float:
-    """Return a scale-invariant ratio, or NaN for an invalid band power."""
-    if (
-        not np.isfinite(numerator)
-        or not np.isfinite(denominator)
-        or numerator < 0.0
-        or denominator <= 0.0
-    ):
-        return float("nan")
-    with np.errstate(over="ignore", divide="ignore", invalid="ignore"):
-        ratio = np.float64(numerator) / np.float64(denominator)
-    return float(ratio) if np.isfinite(ratio) else float("nan")
+EPS = 1e-8
 
 
 def _safe_band_power(
@@ -192,16 +174,20 @@ def extract_eeg_channel_features(
         features["alpha_relative"] = float("nan")
         features["beta_relative"] = float("nan")
 
-    # Dimensionless ratios of band powers in the same units.
-    # Do not add an absolute constant: it can dominate powers expressed in V^2.
-    features["theta_alpha_ratio"] = _safe_power_ratio(
-        powers["theta"], powers["alpha"]
+    # Fatigue-related spectral ratios.
+    features["theta_alpha_ratio"] = (
+        powers["theta"] /
+        (powers["alpha"] + EPS)
     )
-    features["theta_beta_ratio"] = _safe_power_ratio(
-        powers["theta"], powers["beta"]
+
+    features["theta_beta_ratio"] = (
+        powers["theta"] /
+        (powers["beta"] + EPS)
     )
-    features["alpha_beta_ratio"] = _safe_power_ratio(
-        powers["alpha"], powers["beta"]
+
+    features["alpha_beta_ratio"] = (
+        powers["alpha"] /
+        (powers["beta"] + EPS)
     )
 
     # Entropy calculated over 0.5-30 Hz only.
